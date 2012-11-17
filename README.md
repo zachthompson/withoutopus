@@ -1,6 +1,6 @@
 # withoutopus
 
-An Immutant-based app at withoutopus.org for playing around with web-based Clojure.
+An Immutant app at http://withoutopus.org for playing around with web-based Clojure.
 
 ## Usage
 
