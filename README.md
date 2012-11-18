@@ -4,6 +4,7 @@ An Immutant app at http://withoutopus.org for playing around with web-based Cloj
 
 ## Usage
 
+lein deps
 lein immutant run
 
 ## License

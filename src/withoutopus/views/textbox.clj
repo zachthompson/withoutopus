@@ -4,17 +4,16 @@
 ;; Derived from Noir Blog - https://github.com/ibdknox/Noir-blog
 ;;
 (ns withoutopus.views.textbox
-  (:use noir.core
-        hiccup.element
-        hiccup.page
-        hiccup.util
-        hiccup.form)
-  (:require [noir.session :as session]
-            [noir.validation :as vali]
+  (:use [noir.core :only [defpage defpartial render]]
+        [hiccup.element :only [link-to]]
+        [hiccup.page :only [html5 include-css]]
+        [hiccup.util :only [escape-html]]
+        [hiccup.form :only [form-to text-field hidden-field]]
+        [withoutopus.views.common :only [license]])
+  (:require [noir.validation :as vali]
             [noir.response :as resp]
             [noir.request :as req]
-            [withoutopus.models.kormadb :as db]
-            [withoutopus.views.common :as common]))
+            [withoutopus.models.kormadb :as db]))
 
 (defn- ip []
   (let [r (req/ring-request)]
@@ -27,36 +26,40 @@
 (defpartial error-text [errors]
             [:span {:class "error"} (apply str errors)] [:br])
 
-(defn post-item [{:keys [post_id visits ip message date tme] :as post}]
+(defpartial post-item [{:keys [post_id visits ip message date tme] :as post}]
             (when post
               [:li.post
                [:h2 (link-to (perma-link post_id)  (str "Poster #" post_id))]
-               [:ul.datetime
+               [:ul.dt
                 [:li date]
                 [:li tme]
                 [:li (str "Messages " visits)]]
-               [:div.content message]]))
+               [:p.msg message]]))
 
-(defn action-item [{:keys [url text]}]
-            [:li
-             (link-to url text)])
-
-(defn pager [current]
+(defpartial pager [current]
   (map #(if (= current %) (str %) (link-to (str "/textbox/page/" %) %)) (range 1 (inc (db/max-page)))))
 
-(defn textbox-page [{:keys [page id] :as request}]
+(defpartial textbox-page [{:keys [page id] :as request}]
   (let [items (db/get-items request)]
-         (common/textbox-layout
-           [:ul.posts
-            [:li.post
-              (form-to [:post "/textbox"]
-                    (vali/on-error :msg error-text)
-                    (text-field {:class "input" :placeholder "new message"} :msg "")
-                    (vali/on-error :ip error-text);
-                    (hidden-field {:placeholder "poster"} :ip "")
-                    (submit-button {:class "submit"} "Add"))]
-            (map post-item items)]
-            (when (nil? id) [:br] [:p {:class "pager"} (pager page)]))))
+    (html5
+      [:head [:title "text box"] 
+        (include-css "http://yui.yahooapis.com/3.7.3/build/cssreset/cssreset-min.css" "/static/css/textbox-min.css")]
+      [:body
+        [:div#hd
+          [:h1 (link-to "/textbox" "text box")]
+          [:h2 "&nbsp;(a variation on "  (link-to "https://github.com/ibdknox/Noir-blog" "Noir Blog") ")"]
+          (link-to {:class "nav"} "http://withoutopus.org" "more withoutopus")]
+        [:ul
+          [:li.post
+            (form-to [:post "/textbox"]
+             (vali/on-error :msg error-text)
+             (text-field {:class "input" :placeholder "new message"} :msg "")
+             (vali/on-error :ip error-text);
+             (hidden-field {:placeholder "poster"} :ip "")
+             (submit-button {:class "submit"} "Add"))]
+          (map post-item items)]
+          (when (nil? id) [:p#pg (pager page)])
+          (license)])))
 
 (defpage "/textbox" [] 
             (textbox-page {:page 1}))
