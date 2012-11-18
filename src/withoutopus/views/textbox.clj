@@ -8,7 +8,7 @@
         [hiccup.element :only [link-to]]
         [hiccup.page :only [html5 include-css]]
         [hiccup.util :only [escape-html]]
-        [hiccup.form :only [form-to text-field hidden-field]]
+        [hiccup.form :only [form-to text-field hidden-field submit-button]]
         [withoutopus.views.common :only [license]])
   (:require [noir.validation :as vali]
             [noir.response :as resp]
