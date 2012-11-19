@@ -18,16 +18,10 @@
 (defdb mydb (mysql {:db nil :user nil :password nil}))
 (defentity textbox (pk :ip))
 
-(def wc (ic/cache "woo"))
+(def tdc "textbox-data-cache")
 
 (defn split-timestamp [ts] 
   (zipmap [:date :tme] (for [dt [(coerce/from-long (.getTime ts))] fmt [date-format time-format]] (tform/unparse fmt dt))))
-
-(defn max-ts-long []
-  (.getTime (get-in (select textbox (fields (raw "max(ts) ts"))) [0 :ts])))
-
-(defn cache-last-ts []
-  (ic/put wc :textbox-last-post (max-ts-long)))
 
 (defn valid? [{:keys [ip msg] :as post}]
   (vali/rule (vali/has-value? msg)
@@ -41,7 +35,7 @@
 (defn add! [{:keys [ip msg] :as post}]
   (when (valid? post)
     (exec-raw ["insert into textbox (ip, message) values (?, ?) on duplicate key update message = values(message), visits = visits+1" [ip msg]])
-    (cache-last-ts)))
+    (ic/delete-all (ic/cache tdc))))
 
 (defn get-page [page]
   (map 
@@ -56,10 +50,12 @@
 (defn post-count []
   (get-in (select textbox (fields (raw "count(1) cnt"))) [0 :cnt]))
 
-(defn get-items [{:keys [page id]}]
+(defn load-items [{:keys [page id]}]
   (cond (nil? id) (get-page page) 
-        (nil? page) (get-post id) 
+       (nil? page) (get-post id) 
         :else (get-page 1)))
+
+(def get-items (ic/memo load-items tdc :idle 3600))
 
 (defn max-page []
   (let [pc (post-count)] 
