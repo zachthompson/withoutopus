@@ -8,7 +8,7 @@
         [hiccup.element :only [link-to]]
         [hiccup.page :only [html5 include-css]]
         [hiccup.util :only [escape-html]]
-        [hiccup.form :only [form-to text-field hidden-field submit-button]]
+        [hiccup.form :only [form-to text-field submit-button]]
         [withoutopus.views.common :only [license]])
   (:require [noir.validation :as vali]
             [noir.response :as resp]
@@ -53,10 +53,9 @@
           [:li.post
             (form-to [:post "/textbox"]
              (vali/on-error :msg error-text)
-             (text-field {:class "input" :placeholder "new message"} :msg "")
+             (text-field {:id "msg" :maxlength 100 :placeholder "new message"} :msg )
              (vali/on-error :ip error-text);
-             (hidden-field {:placeholder "poster"} :ip "")
-             (submit-button {:class "submit"} "Add"))]
+             (submit-button {:id "add"} "Add"))]
           (map post-item items)]
           (when (nil? id) [:p#pg (pager page)])
           (license)])))
